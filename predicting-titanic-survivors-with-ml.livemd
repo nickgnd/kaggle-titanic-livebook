@@ -1,0 +1,435 @@
+<!-- livebook:{"file_entries":[{"name":"train.csv","type":"attachment"}]} -->
+
+# Predicting Titanic survivors with Explorer and ML 🧊🛳️
+
+```elixir
+Mix.install([
+  {:scholar, "~> 0.2.1"},
+  {:explorer, "~> 0.7.1"},
+  {:exgboost, "~> 0.3"},
+  {:kino_explorer, "~> 0.1.12"},
+  {:kino_vega_lite, "~> 0.1.10"}
+])
+```
+
+## Intro
+
+* Kaggle https://www.kaggle.com/competitions/titanic/data
+* No Slides Conf talk https://www.youtube.com/watch?v=YhZXU5zUnO0
+
+## Importing Data
+
+```elixir
+df =
+  Kino.FS.file_path("train.csv")
+  |> Explorer.DataFrame.from_csv!()
+```
+
+## Exploring the data
+
+<!-- livebook:{"attrs":{"chart_title":"Survived (0 = NO, 1 = YES)","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Survived","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 400, height: 400, title: "Survived (0 = NO, 1 = YES)")
+|> VegaLite.data_from_values(df, only: ["Survived"])
+|> VegaLite.mark(:bar)
+|> VegaLite.encode_field(:x, "Survived", type: :nominal)
+|> VegaLite.encode(:y, aggregate: :count)
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Age wrt Survived","height":401,"layers":[{"active":true,"chart_type":"point","color_field":"__count__","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Survived","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"Age","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 400, height: 401, title: "Age wrt Survived")
+|> VegaLite.data_from_values(df, only: ["Survived", "Age"])
+|> VegaLite.mark(:point)
+|> VegaLite.encode_field(:x, "Survived", type: :nominal)
+|> VegaLite.encode_field(:y, "Age", type: :quantitative)
+|> VegaLite.encode(:color, aggregate: :count)
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Class","height":600,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Pclass","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 400, height: 600, title: "Class")
+|> VegaLite.data_from_values(df, only: ["Pclass"])
+|> VegaLite.mark(:bar)
+|> VegaLite.encode_field(:x, "Pclass", type: :nominal)
+|> VegaLite.encode(:y, aggregate: :count)
+```
+
+```elixir
+# https://vega.github.io/vega-lite/docs/density.html
+# https://mathisonian.github.io/kde/
+
+VegaLite.new(width: 400, height: 400, title: "Class density (KDE)")
+|> VegaLite.data_from_values(df, only: ["Age", "Pclass"])
+|> VegaLite.layers([
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 1")
+  |> VegaLite.transform(density: "Age", extent: [-40, 120])
+  |> VegaLite.mark(:line, color: "red")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Age")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative),
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 2")
+  |> VegaLite.transform(density: "Age", extent: [-40, 120])
+  |> VegaLite.mark(:line, color: "blue")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Age")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative),
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 3")
+  |> VegaLite.transform(density: "Age", extent: [-40, 120])
+  |> VegaLite.mark(:line, color: "green")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Age")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative)
+])
+```
+
+## Sex
+
+<!-- livebook:{"attrs":{"chart_title":"Sex","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Sex","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 400, height: 400, title: "Sex")
+|> VegaLite.data_from_values(df, only: ["Sex"])
+|> VegaLite.mark(:bar)
+|> VegaLite.encode_field(:x, "Sex", type: :nominal)
+|> VegaLite.encode(:y, aggregate: :count)
+```
+
+```elixir
+VegaLite.new(title: "Survived per Sex")
+|> VegaLite.data_from_values(df, only: ["Sex", "Survived"])
+|> VegaLite.facet(
+  [field: "Sex"],
+  VegaLite.new(width: 300, height: 300)
+  |> VegaLite.mark(:bar)
+  |> VegaLite.encode_field(:x, "Survived", type: :nominal)
+  |> VegaLite.encode(:y, aggregate: :count, type: :quantitative)
+)
+
+# It would be nice to compute the percentage here!
+```
+
+```elixir
+# Same but stacked
+VegaLite.new(width: 400, height: 400)
+|> VegaLite.data_from_values(df, only: ["Sex", "Survived"])
+|> VegaLite.mark(:bar, tooltip: true)
+|> VegaLite.encode_field(:x, "Survived", type: :nominal)
+|> VegaLite.encode(:y, aggregate: :count, type: :quantitative, stack: :normalize)
+|> VegaLite.encode(:color, field: "Sex", scale: %{"range" => ["lightblue", "aquamarine"]})
+```
+
+```elixir
+# https://vega.github.io/vega-lite/docs/density.html
+# https://mathisonian.github.io/kde/
+
+VegaLite.new(width: 400, height: 400, title: "Class wrt Survived")
+|> VegaLite.data_from_values(df, only: ["Survived", "Pclass"])
+|> VegaLite.layers([
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 1")
+  |> VegaLite.transform(density: "Survived", extent: [-0.5, 1.5])
+  |> VegaLite.mark(:line, color: "red")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Survived")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative),
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 2")
+  |> VegaLite.transform(density: "Survived", extent: [-0.5, 1.5])
+  |> VegaLite.mark(:line, color: "blue")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Survived")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative),
+  VegaLite.new()
+  |> VegaLite.transform(filter: "datum.Pclass == 3")
+  |> VegaLite.transform(density: "Survived", extent: [-0.5, 1.5])
+  |> VegaLite.mark(:line, color: "green")
+  |> VegaLite.encode_field(:x, "value", type: :quantitative, title: "Survived")
+  |> VegaLite.encode_field(:y, "density", type: :quantitative)
+])
+```
+
+## Combining sex and class
+
+```elixir
+VegaLite.new(title: "Survived grouped by Class and Sex")
+|> VegaLite.data_from_values(df, only: ["Sex", "Pclass", "Survived"])
+|> VegaLite.facet(
+  [row: [field: "Pclass", title: "Class"], column: [field: "Sex", title: "Sex"]],
+  VegaLite.new(width: 200, height: 300)
+  |> VegaLite.mark(:bar, tooltip: true)
+  |> VegaLite.encode_field(:x, "Survived", type: :nominal)
+  |> VegaLite.encode(:y, aggregate: :count, type: :quantitative)
+)
+```
+
+## Predict data with algorithm
+
+### 1st: Random
+
+50 % chances of guessing the right answer
+
+<!-- livebook:{"break_markdown":true} -->
+
+### 2nd: based on Sex
+
+* women survive
+* man die
+
+```elixir
+require Explorer.DataFrame, as: DF
+
+df1 =
+  df
+  # add a new column and prefill based on the sex
+  |> DF.mutate(
+    hyp:
+      if col("Sex") == "female" do
+        1
+      else
+        0
+      end
+  )
+  |> DF.mutate(
+    result:
+      if col("hyp") == col("Survived") do
+        1
+      else
+        0
+      end
+  )
+
+total_rows = Explorer.DataFrame.n_rows(df1)
+
+matches = Explorer.DataFrame.filter(df1, result == 1) |> Explorer.DataFrame.n_rows()
+
+matches / total_rows * 100
+```
+
+## Get fancier
+
+### Prepare the data
+
+* Fill missing values
+* Categorize columns (from string to integers)
+
+```elixir
+# df = 
+#   df
+#   # |> DF.lazy()
+#   |> DF.discard("Cabin")
+#   |> DF.mutate(Age: fill_missing(col("Age"), :mean))
+#   |> DF.mutate(Embarked: cast(col("Embarked"), :category))
+#   |> DF.mutate("Sex":
+#     if col("Sex") == "female" do
+#       1
+#     else
+#       0
+#     end
+#   )
+#   |> DF.mutate("Embarked":
+#     cond do
+#       col("Embarked") == "B" -> 0
+#       col("Embarked") == "C" -> 1
+#       true -> 2
+#     end
+#   )
+
+df =
+  df
+  # |> DF.lazy()
+  |> DF.discard("Cabin")
+  |> DF.mutate(Age: fill_missing(col("Age"), :mean))
+  |> DF.mutate(Embarked: fill_missing(col("Embarked"), "S"))
+  |> DF.mutate(Embarked: cast(col("Embarked"), :category))
+  |> DF.mutate(Sex: cast(col("Sex"), :category))
+```
+
+### Linear model
+
+```elixir
+target =
+  df[["Survived"]]
+  |> Explorer.DataFrame.to_series()
+  |> Map.get("Survived")
+  |> Explorer.Series.to_tensor()
+  |> dbg()
+```
+
+```elixir
+features =
+  df[["Pclass", "Age", "Sex", "SibSp", "Parch"]]
+  # df[["Pclass", "Age", "Sex", "SibSp", "Parch", "Fare", "Embarked"]]
+  |> Nx.stack(axis: -1)
+```
+
+```elixir
+# TODO: LinearRegression Vs. LogisticRegression
+# Different optimizers
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+classifier =
+  Scholar.Linear.LogisticRegression.fit(
+    features,
+    target,
+    num_classes: 2,
+    iterations: 100,
+    # Optimizers: https://hexdocs.pm/polaris/Polaris.Optimizers.html
+    # optimizer: :sgd
+    optimizer: :yogi
+  )
+```
+
+```elixir
+predictions = Scholar.Linear.LogisticRegression.predict(classifier, features)
+
+Scholar.Metrics.Classification.accuracy(target, predictions)
+```
+
+## Polynomial
+
+```elixir
+alias Scholar.Linear.PolynomialRegression, as: PR
+
+poly_features = Scholar.Linear.PolynomialRegression.transform(features, degree: 2)
+
+classifier =
+  Scholar.Linear.LogisticRegression.fit(
+    poly_features,
+    target,
+    num_classes: 2,
+    iterations: 100,
+    optimizer: :yogi
+  )
+```
+
+```elixir
+predictions = Scholar.Linear.LogisticRegression.predict(classifier, poly_features)
+
+Scholar.Metrics.Classification.accuracy(target, predictions)
+```
+
+## Decision Tree
+
+```elixir
+features =
+  df[["Pclass", "Age", "Sex", "SibSp", "Parch", "Fare", "Embarked"]]
+  |> Nx.stack(axis: -1)
+```
+
+```elixir
+target_hot_encoded =
+  target
+  |> Scholar.Preprocessing.one_hot_encode(num_classes: 2)
+  |> dbg()
+```
+
+```elixir
+model =
+  EXGBoost.train(
+    features,
+    target_hot_encoded,
+    obj: :binary_logistic,
+    max_depth: 5
+    # max_depth: 10
+  )
+
+predictions =
+  EXGBoost.predict(model, features)
+  |> Nx.argmax(axis: 1)
+
+Scholar.Metrics.Classification.accuracy(target, predictions)
+```
+
+## Avoid overfitting with cross-validation
+
+https://notes.club/elixir-nx/scholar/notebooks/cv_gradient_boosting_tree
+
+```elixir
+alias Scholar.ModelSelection
+alias Scholar.Preprocessing
+alias Scholar.Metrics.Classification
+
+folding_fn = fn x -> ModelSelection.k_fold_split(x, 5) end
+
+scoring_fn = fn x, y ->
+  {x_train, x_test} = x
+  {y_train, y_test} = y
+
+  y_train_hot_encoded = Preprocessing.one_hot_encode(y_train, num_classes: 2)
+
+  y_pred =
+    EXGBoost.train(
+      x_train,
+      y_train_hot_encoded,
+      obj: :binary_logistic,
+      max_depth: 5,
+      evals: [{x_train, y_train_hot_encoded, "training"}],
+      verbose_eval: true
+    )
+    |> EXGBoost.predict(x_test)
+    |> Nx.argmax(axis: 1)
+
+  Classification.accuracy(y_test, y_pred)
+end
+```
+
+```elixir
+cv_scores =
+  ModelSelection.cross_validate(
+    features,
+    target,
+    folding_fn,
+    scoring_fn
+  )
+  |> Nx.squeeze()
+```
+
+```elixir
+Nx.mean(cv_scores)
+```
+
+## Plotting
+
+```elixir
+# https://stackoverflow.com/questions/60186747/how-do-i-include-feature-names-in-the-plot-tree-function-from-the-xgboost-librar
+["Pclass", "Age", "Sex", "SibSp", "Parch", "Fare", "Embarked"]
+|> Enum.with_index(fn element, index -> "#{index} #{element} q" end)
+|> Enum.join("\n")
+|> then(&File.write!("/Users/nicolo.gnudi/fmap.txt", &1))
+
+EXGBoost.Booster.get_dump(model, fmap: "/Users/nicolo.gnudi/fmap.txt", format: :json)
+# |> Jason.Formatter.pretty_print()
+# |> then(& File.write!("/Users/nicolo.gnudi/dt.json", &1))
+```
+
+### Export model and import it in Python for plotting
+
+https://github.com/acalejos/exgboost/issues/29
+
+```elixir
+# Dump the model
+EXGBoost.write_weights(model, "/Users/nicolo.gnudi/dtw")
+```
+
+Then, install the required Python packages
+
+```shell
+pip3 install xgboost
+pip3 install graphviz
+```
+
+<br />
+
+And finally plot the Decision Tree
+
+```python
+❯ python3
+
+>>> import xgboost as xgb
+>>> model = xgb.Booster()
+>>> model.load_model("/Users/nicolo.gnudi/dtw.json")
+>>> g = xgb.to_graphviz(model, fmap="/Users/nicolo.gnudi/fmap.txt")
+>>> g.render(filename="/Users/nicolo.gnudi/dtg")
+'/Users/nicolo.gnudi/dtg.pdf'
+```
