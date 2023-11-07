@@ -12,7 +12,7 @@ Mix.install([
 ])
 ```
 
-## Intro
+## Before starting…
 
 * Kaggle https://www.kaggle.com/competitions/titanic/data
 * No Slides Conf talk https://www.youtube.com/watch?v=YhZXU5zUnO0
@@ -27,10 +27,10 @@ df =
 
 ## Exploring the data
 
-<!-- livebook:{"attrs":{"chart_title":"Survived (0 = NO, 1 = YES)","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Survived","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"chart_title":"Survived distribution (0 = NO, 1 = YES)","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Survived","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
 
 ```elixir
-VegaLite.new(width: 400, height: 400, title: "Survived (0 = NO, 1 = YES)")
+VegaLite.new(width: 400, height: 400, title: "Survived distribution (0 = NO, 1 = YES)")
 |> VegaLite.data_from_values(df, only: ["Survived"])
 |> VegaLite.mark(:bar)
 |> VegaLite.encode_field(:x, "Survived", type: :nominal)
@@ -48,10 +48,10 @@ VegaLite.new(width: 400, height: 401, title: "Age wrt Survived")
 |> VegaLite.encode(:color, aggregate: :count)
 ```
 
-<!-- livebook:{"attrs":{"chart_title":"Class","height":600,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Pclass","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"chart_title":"Class distribution","height":600,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Pclass","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
 
 ```elixir
-VegaLite.new(width: 400, height: 600, title: "Class")
+VegaLite.new(width: 400, height: 600, title: "Class distribution")
 |> VegaLite.data_from_values(df, only: ["Pclass"])
 |> VegaLite.mark(:bar)
 |> VegaLite.encode_field(:x, "Pclass", type: :nominal)
@@ -88,10 +88,10 @@ VegaLite.new(width: 400, height: 400, title: "Class density (KDE)")
 
 ## Sex
 
-<!-- livebook:{"attrs":{"chart_title":"Sex","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Sex","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"chart_title":"Sex distribution","height":400,"layers":[{"active":true,"chart_type":"bar","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"df","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Sex","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"__count__","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":null}],"vl_alias":"Elixir.VegaLite","width":400},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
 
 ```elixir
-VegaLite.new(width: 400, height: 400, title: "Sex")
+VegaLite.new(width: 400, height: 400, title: "Sex distribution")
 |> VegaLite.data_from_values(df, only: ["Sex"])
 |> VegaLite.mark(:bar)
 |> VegaLite.encode_field(:x, "Sex", type: :nominal)
@@ -99,7 +99,7 @@ VegaLite.new(width: 400, height: 400, title: "Sex")
 ```
 
 ```elixir
-VegaLite.new(title: "Survived per Sex")
+VegaLite.new(title: "Survived wrt Sex")
 |> VegaLite.data_from_values(df, only: ["Sex", "Survived"])
 |> VegaLite.facet(
   [field: "Sex"],
@@ -113,7 +113,7 @@ VegaLite.new(title: "Survived per Sex")
 ```
 
 ```elixir
-# Same but stacked
+# [ SKIP] Same but stacked
 VegaLite.new(width: 400, height: 400)
 |> VegaLite.data_from_values(df, only: ["Sex", "Survived"])
 |> VegaLite.mark(:bar, tooltip: true)
@@ -123,10 +123,7 @@ VegaLite.new(width: 400, height: 400)
 ```
 
 ```elixir
-# https://vega.github.io/vega-lite/docs/density.html
-# https://mathisonian.github.io/kde/
-
-VegaLite.new(width: 400, height: 400, title: "Class wrt Survived")
+VegaLite.new(width: 400, height: 400, title: "Survived density wrt Class")
 |> VegaLite.data_from_values(df, only: ["Survived", "Pclass"])
 |> VegaLite.layers([
   VegaLite.new()
@@ -164,25 +161,25 @@ VegaLite.new(title: "Survived grouped by Class and Sex")
 )
 ```
 
-## Predict data with algorithm
+## Predict data with algorithms
 
-### 1st: Random
+### Random
 
-50 % chances of guessing the right answer
+50% chances of guessing the right answer.
 
 <!-- livebook:{"break_markdown":true} -->
 
-### 2nd: based on Sex
+### Based on Sex value
 
-* women survive
-* man die
+* Women survive
+* Men do not survive
 
 ```elixir
 require Explorer.DataFrame, as: DF
 
-df1 =
+df_modified =
   df
-  # add a new column and prefill based on the sex
+  # add a column `hyp` and prefill it based on the sex
   |> DF.mutate(
     hyp:
       if col("Sex") == "female" do
@@ -191,6 +188,7 @@ df1 =
         0
       end
   )
+  # add a column `result` to check if the hypothesis is correct
   |> DF.mutate(
     result:
       if col("hyp") == col("Survived") do
@@ -200,14 +198,16 @@ df1 =
       end
   )
 
-total_rows = Explorer.DataFrame.n_rows(df1)
+total_rows = Explorer.DataFrame.n_rows(df_modified)
 
-matches = Explorer.DataFrame.filter(df1, result == 1) |> Explorer.DataFrame.n_rows()
+matches_count =
+  Explorer.DataFrame.filter(df_modified, result == 1)
+  |> Explorer.DataFrame.n_rows()
 
-matches / total_rows * 100
+matches_count / total_rows * 100
 ```
 
-## Get fancier
+## ✨ Fancy stuff ✨
 
 ### Prepare the data
 
@@ -215,27 +215,6 @@ matches / total_rows * 100
 * Categorize columns (from string to integers)
 
 ```elixir
-# df = 
-#   df
-#   # |> DF.lazy()
-#   |> DF.discard("Cabin")
-#   |> DF.mutate(Age: fill_missing(col("Age"), :mean))
-#   |> DF.mutate(Embarked: cast(col("Embarked"), :category))
-#   |> DF.mutate("Sex":
-#     if col("Sex") == "female" do
-#       1
-#     else
-#       0
-#     end
-#   )
-#   |> DF.mutate("Embarked":
-#     cond do
-#       col("Embarked") == "B" -> 0
-#       col("Embarked") == "C" -> 1
-#       true -> 2
-#     end
-#   )
-
 df =
   df
   # |> DF.lazy()
@@ -246,7 +225,7 @@ df =
   |> DF.mutate(Sex: cast(col("Sex"), :category))
 ```
 
-### Linear model
+### Linear Regression
 
 ```elixir
 target =
@@ -265,9 +244,6 @@ features =
 ```
 
 ```elixir
-# TODO: LinearRegression Vs. LogisticRegression
-# Different optimizers
-# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
 classifier =
   Scholar.Linear.LogisticRegression.fit(
     features,
@@ -275,8 +251,8 @@ classifier =
     num_classes: 2,
     iterations: 100,
     # Optimizers: https://hexdocs.pm/polaris/Polaris.Optimizers.html
-    # optimizer: :sgd
-    optimizer: :yogi
+    optimizer: :sgd
+    # optimizer: :yogi
   )
 ```
 
@@ -286,12 +262,11 @@ predictions = Scholar.Linear.LogisticRegression.predict(classifier, features)
 Scholar.Metrics.Classification.accuracy(target, predictions)
 ```
 
-## Polynomial
+### Polynomial Regression
 
 ```elixir
-alias Scholar.Linear.PolynomialRegression, as: PR
-
-poly_features = Scholar.Linear.PolynomialRegression.transform(features, degree: 2)
+poly_features =
+  Scholar.Linear.PolynomialRegression.transform(features, degree: 2)
 
 classifier =
   Scholar.Linear.LogisticRegression.fit(
